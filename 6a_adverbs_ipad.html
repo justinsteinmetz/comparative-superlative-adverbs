@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Faster · Better · Best</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@700;900&family=Nunito:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0f1b2d;
+  --surface: #162235;
+  --surface2: #1e304a;
+  --accent: #ff6b35;
+  --green: #3ddc84;
+  --yellow: #ffd166;
+  --blue: #74b9ff;
+  --red: #ff5555;
+  --text: #f0f4ff;
+  --muted: #7a8fa8;
+  --radius: 20px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+html, body {
+  width: 100%; height: 100%;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Nunito', sans-serif;
+  touch-action: manipulation;
+}
+
+/* SCREENS */
+.screen {
+  position: absolute;
+  inset: 0;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.screen.visible { display: flex; }
+
+/* HEADER */
+.screen-header {
+  width: 100%;
+  background: var(--surface);
+  padding: 20px 28px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+  border-bottom: 2px solid var(--surface2);
+}
+.screen-header h1 {
+  font-family: 'Fraunces', serif;
+  font-size: 1.4rem;
+  color: var(--yellow);
+  line-height: 1.1;
+}
+.screen-header .phase-label {
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-top: 2px;
+}
+.progress-dots {
+  display: flex;
+  gap: 9px;
+  align-items: center;
+}
+.progress-dot {
+  width: 11px; height: 11px;
+  border-radius: 50%;
+  background: var(--surface2);
+  border: 2px solid var(--muted);
+  transition: all 0.3s;
+}
+.progress-dot.done { background: var(--green); border-color: var(--green); }
+.progress-dot.active { background: var(--accent); border-color: var(--accent); transform: scale(1.25); }
+
+.screen-body {
+  width: 100%;
+  max-width: 720px;
+  padding: 24px 20px 40px;
+  flex: 1;
+}
+
+/* TYPOGRAPHY */
+.big-q {
+  font-family: 'Fraunces', serif;
+  font-size: 1.9rem;
+  line-height: 1.2;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+.sub {
+  font-size: 0.95rem;
+  color: var(--muted);
+  margin-bottom: 28px;
+  line-height: 1.5;
+}
+
+/* BIG TAP BUTTONS */
+.tap-btn {
+  display: block;
+  width: 100%;
+  padding: 22px 24px;
+  border-radius: var(--radius);
+  border: 2px solid transparent;
+  background: var(--surface2);
+  color: var(--text);
+  font-family: 'Nunito', sans-serif;
+  font-size: 1.2rem;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+  margin-bottom: 14px;
+  transition: all 0.18s;
+  -webkit-tap-highlight-color: transparent;
+  position: relative;
+  overflow: hidden;
+}
+.tap-btn:active { transform: scale(0.97); }
+.tap-btn.correct {
+  border-color: var(--green);
+  background: rgba(61,220,132,0.12);
+  color: var(--green);
+}
+.tap-btn.wrong {
+  border-color: var(--red);
+  background: rgba(255,85,85,0.10);
+  color: var(--red);
+}
+.tap-btn.reveal {
+  border-color: var(--blue);
+  background: rgba(116,185,255,0.10);
+  color: var(--blue);
+}
+.tap-btn.disabled { opacity: 0.4; pointer-events: none; }
+
+.tap-btn .option-letter {
+  display: inline-block;
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: var(--surface);
+  font-size: 0.85rem;
+  text-align: center;
+  line-height: 32px;
+  margin-right: 14px;
+  flex-shrink: 0;
+}
+.tap-btn .option-row { display: flex; align-items: center; }
+
+/* NAV BUTTON */
+.nav-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: var(--accent);
+  color: white;
+  border: none;
+  border-radius: 50px;
+  padding: 18px 36px;
+  font-family: 'Nunito', sans-serif;
+  font-size: 1.05rem;
+  font-weight: 800;
+  cursor: pointer;
+  width: 100%;
+  margin-top: 10px;
+  transition: all 0.2s;
+  letter-spacing: 0.02em;
+}
+.nav-btn:active { transform: scale(0.97); opacity: 0.9; }
+.nav-btn.secondary {
+  background: var(--surface2);
+  color: var(--text);
+  border: 2px solid var(--muted);
+}
+
+/* FEEDBACK PILL */
+.feedback-pill {
+  display: inline-block;
+  padding: 10px 18px;
+  border-radius: 50px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  margin: 10px 0 16px;
+  min-height: 44px;
+  line-height: 1.4;
+}
+.feedback-pill.good { background: rgba(61,220,132,0.15); color: var(--green); }
+.feedback-pill.bad  { background: rgba(255,85,85,0.12);  color: var(--red); }
+.feedback-pill.info { background: rgba(116,185,255,0.12); color: var(--blue); }
+.feedback-pill.hidden { visibility: hidden; }
+
+/* FLIP CARDS (warm-up) */
+.flip-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 24px;
+}
+.flip-card {
+  background: var(--surface2);
+  border-radius: 18px;
+  padding: 22px 16px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.22s;
+  border: 2px solid transparent;
+  min-height: 120px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.flip-card:active { transform: scale(0.96); }
+.flip-card.flipped { border-color: var(--yellow); background: rgba(255,209,102,0.08); }
+.flip-card .front { font-family: 'Fraunces', serif; font-size: 1.5rem; color: var(--text); }
+.flip-card .back { display: none; }
+.flip-card.flipped .front { display: none; }
+.flip-card.flipped .back {
+  display: block;
+  font-size: 0.82rem;
+  line-height: 1.7;
+  color: var(--yellow);
+  font-weight: 700;
+}
+.flip-card .tap-hint { font-size: 0.68rem; color: var(--muted); margin-top: 6px; letter-spacing: 0.1em; text-transform: uppercase; }
+
+/* SORT GAME */
+.sort-bank {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 24px;
+  min-height: 60px;
+  padding: 14px;
+  background: var(--surface2);
+  border-radius: var(--radius);
+}
+.sort-chip {
+  padding: 12px 20px;
+  border-radius: 50px;
+  background: var(--surface);
+  color: var(--text);
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+  border: 2px solid var(--muted);
+  transition: all 0.18s;
+  user-select: none;
+}
+.sort-chip:active { transform: scale(0.94); }
+.sort-chip.placed { opacity: 0.3; pointer-events: none; }
+.sort-chip.correct-chip { border-color: var(--green); background: rgba(61,220,132,0.15); color: var(--green); }
+.sort-chip.wrong-chip  { border-color: var(--red); background: rgba(255,85,85,0.12); color: var(--red); }
+
+.sort-zones {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.sort-zone {
+  background: var(--surface2);
+  border-radius: 16px;
+  padding: 14px 12px;
+  min-height: 120px;
+  border: 2px dashed var(--muted);
+  transition: border-color 0.2s;
+}
+.sort-zone.active-zone { border-color: var(--accent); }
+.sort-zone h4 {
+  font-size: 0.7rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 10px;
+  text-align: center;
+}
+.sort-zone .zone-chips { display: flex; flex-direction: column; gap: 7px; }
+.zone-chip {
+  padding: 9px 14px;
+  border-radius: 50px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  text-align: center;
+}
+.zone-chip.correct-zone { background: rgba(61,220,132,0.18); color: var(--green); border: 2px solid var(--green); }
+.zone-chip.wrong-zone   { background: rgba(255,85,85,0.15); color: var(--red); border: 2px solid var(--red); }
+.zone-chip.pending-zone { background: var(--surface); color: var(--text); border: 2px solid var(--muted); }
+
+/* SELECTED STATE */
+.sort-chip.selected {
+  border-color: var(--accent);
+  background: rgba(255,107,53,0.15);
+  color: var(--accent);
+  transform: scale(1.06);
+}
+
+/* CONVO CARDS */
+.convo-card {
+  background: var(--surface2);
+  border-radius: 22px;
+  padding: 30px 24px;
+  margin-bottom: 20px;
+  border-left: 5px solid var(--accent);
+  position: relative;
+}
+.convo-emoji { font-size: 2.6rem; margin-bottom: 10px; }
+.convo-q {
+  font-family: 'Fraunces', serif;
+  font-size: 1.35rem;
+  line-height: 1.3;
+  margin-bottom: 14px;
+}
+.convo-hint {
+  font-size: 0.85rem;
+  color: var(--muted);
+  font-style: italic;
+  line-height: 1.5;
+  padding: 10px 14px;
+  background: var(--surface);
+  border-radius: 10px;
+}
+.convo-nav {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+}
+.convo-nav .nav-btn { flex: 1; padding: 14px; font-size: 0.95rem; }
+
+.prompt-counter {
+  text-align: center;
+  font-size: 0.82rem;
+  color: var(--muted);
+  margin-bottom: 8px;
+  letter-spacing: 0.08em;
+}
+
+/* SCORE */
+.score-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 18px;
+  border-radius: 50px;
+  background: var(--surface2);
+  font-weight: 800;
+  font-size: 0.95rem;
+  color: var(--yellow);
+  margin-bottom: 20px;
+}
+
+/* FINISH */
+.finish-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 40px 20px;
+}
+.trophy { font-size: 5rem; margin-bottom: 16px; animation: pop 0.5s cubic-bezier(.36,1.56,.64,1); }
+@keyframes pop { from { transform: scale(0); } to { transform: scale(1); } }
+
+/* TIMER */
+.timer-track {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  height: 6px;
+  background: var(--surface2);
+  z-index: 999;
+}
+.timer-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--green), var(--accent));
+  transition: width 1s linear;
+}
+.timer-label {
+  position: fixed;
+  bottom: 12px;
+  right: 18px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: var(--muted);
+  z-index: 999;
+  letter-spacing: 0.05em;
+}
+
+/* DIVIDER */
+.divider { width: 100%; height: 1px; background: var(--surface2); margin: 20px 0; }
+
+/* WORD COUNTER progress */
+.q-counter {
+  font-size: 0.78rem;
+  color: var(--muted);
+  text-align: right;
+  margin-bottom: 6px;
+  letter-spacing: 0.08em;
+}
+
+@media (min-width: 600px) {
+  .flip-grid { grid-template-columns: repeat(3, 1fr); }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════
+     SCREEN 0 — WARM-UP: FLIP CARDS
+═══════════════════════════════════════════ -->
+<div class="screen visible" id="screen-0">
+  <div class="screen-header">
+    <div>
+      <div class="screen-header h1" style="font-family:'Fraunces',serif; font-size:1.4rem; color:var(--yellow);">Faster · Better · Best</div>
+      <div class="phase-label">Warm-up · 3 min</div>
+    </div>
+    <div class="progress-dots">
+      <div class="progress-dot active"></div>
+      <div class="progress-dot"></div>
+      <div class="progress-dot"></div>
+      <div class="progress-dot"></div>
+    </div>
+  </div>
+  <div class="screen-body">
+    <div class="big-q">Do you remember?</div>
+    <div class="sub">Tap each adverb to see its comparative and superlative forms.</div>
+
+    <div class="flip-grid">
+      <div class="flip-card" onclick="flipCard(this)">
+        <div class="front">fast<div class="tap-hint">tap to flip</div></div>
+        <div class="back">faster<br>the fastest</div>
+      </div>
+      <div class="flip-card" onclick="flipCard(this)">
+        <div class="front">hard<div class="tap-hint">tap to flip</div></div>
+        <div class="back">harder<br>the hardest</div>
+      </div>
+      <div class="flip-card" onclick="flipCard(this)">
+        <div class="front">well<div class="tap-hint">tap to flip</div></div>
+        <div class="back">better<br>the best<br><span style="color:var(--accent);font-size:0.75rem;">★ irregular</span></div>
+      </div>
+      <div class="flip-card" onclick="flipCard(this)">
+        <div class="front">badly<div class="tap-hint">tap to flip</div></div>
+        <div class="back">worse<br>the worst<br><span style="color:var(--accent);font-size:0.75rem;">★ irregular</span></div>
+      </div>
+      <div class="flip-card" onclick="flipCard(this)">
+        <div class="front">early<div class="tap-hint">tap to flip</div></div>
+        <div class="back">earlier<br>the earliest</div>
+      </div>
+      <div class="flip-card" onclick="flipCard(this)">
+        <div class="front">carefully<div class="tap-hint">tap to flip</div></div>
+        <div class="back">more carefully<br>the most carefully</div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <button class="nav-btn" onclick="goTo(1)">Ready — let's play →</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     SCREEN 1 — SORT GAME
+═══════════════════════════════════════════ -->
+<div class="screen" id="screen-1">
+  <div class="screen-header">
+    <div>
+      <div style="font-family:'Fraunces',serif; font-size:1.4rem; color:var(--yellow);">Sort It Out</div>
+      <div class="phase-label">Game 1 · 5 min</div>
+    </div>
+    <div class="progress-dots">
+      <div class="progress-dot done"></div>
+      <div class="progress-dot active"></div>
+      <div class="progress-dot"></div>
+      <div class="progress-dot"></div>
+    </div>
+  </div>
+  <div class="screen-body">
+    <div class="big-q">Sort the words</div>
+    <div class="sub">Tap a word from the bank, then tap the correct column to place it.</div>
+
+    <div class="sort-bank" id="sortBank"></div>
+
+    <div class="sort-zones">
+      <div class="sort-zone" id="zone-base" onclick="placeChip('base')">
+        <h4>Base</h4>
+        <div class="zone-chips" id="zone-base-chips"></div>
+      </div>
+      <div class="sort-zone" id="zone-comp" onclick="placeChip('comp')">
+        <h4>Comparative</h4>
+        <div class="zone-chips" id="zone-comp-chips"></div>
+      </div>
+      <div class="sort-zone" id="zone-sup" onclick="placeChip('sup')">
+        <h4>Superlative</h4>
+        <div class="zone-chips" id="zone-sup-chips"></div>
+      </div>
+    </div>
+
+    <div class="feedback-pill hidden" id="sortFeedback"></div>
+    <button class="nav-btn" id="sortNext" style="display:none;" onclick="goTo(2)">Nice work — next game →</button>
+    <button class="nav-btn secondary" id="sortCheck" onclick="checkSort()">Check answers</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     SCREEN 2 — MULTIPLE CHOICE QUIZ
+═══════════════════════════════════════════ -->
+<div class="screen" id="screen-2">
+  <div class="screen-header">
+    <div>
+      <div style="font-family:'Fraunces',serif; font-size:1.4rem; color:var(--yellow);">Choose the Right Form</div>
+      <div class="phase-label">Game 2 · 6 min</div>
+    </div>
+    <div class="progress-dots">
+      <div class="progress-dot done"></div>
+      <div class="progress-dot done"></div>
+      <div class="progress-dot active"></div>
+      <div class="progress-dot"></div>
+    </div>
+  </div>
+  <div class="screen-body">
+    <div class="score-chip">⭐ <span id="quizScoreDisplay">0 / 0</span></div>
+    <div class="q-counter" id="quizCounter">Question 1 of 6</div>
+    <div class="big-q" id="quizQ" style="font-size:1.5rem;"></div>
+    <div style="margin: 20px 0;" id="quizOptions"></div>
+    <div class="feedback-pill hidden" id="quizFeedback"></div>
+    <button class="nav-btn" id="quizNextBtn" style="display:none;" onclick="nextQuizQ()">Next question →</button>
+    <button class="nav-btn" id="quizFinishBtn" style="display:none;" onclick="goTo(3)">All done — let's talk →</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     SCREEN 3 — CONVERSATION PROMPTS
+═══════════════════════════════════════════ -->
+<div class="screen" id="screen-3">
+  <div class="screen-header">
+    <div>
+      <div style="font-family:'Fraunces',serif; font-size:1.4rem; color:var(--yellow);">Talk About It</div>
+      <div class="phase-label">Speaking · 5 min</div>
+    </div>
+    <div class="progress-dots">
+      <div class="progress-dot done"></div>
+      <div class="progress-dot done"></div>
+      <div class="progress-dot done"></div>
+      <div class="progress-dot active"></div>
+    </div>
+  </div>
+  <div class="screen-body">
+    <div class="sub">Work with the person next to you. Answer the question, then ask your partner.</div>
+
+    <div class="prompt-counter" id="promptCounter">1 / 6</div>
+
+    <div class="convo-card">
+      <div class="convo-emoji" id="convoEmoji">🏃</div>
+      <div class="convo-q" id="convoQ">Loading...</div>
+      <div class="convo-hint" id="convoHint"></div>
+    </div>
+
+    <div class="convo-nav">
+      <button class="nav-btn secondary" onclick="prevPrompt()">← Back</button>
+      <button class="nav-btn" onclick="nextPrompt()" id="promptNextBtn">Next →</button>
+    </div>
+
+    <div class="divider"></div>
+    <div style="font-size:0.78rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.12em; margin-bottom:10px;">Useful phrases</div>
+    <div style="display:flex; flex-wrap:wrap; gap:9px;">
+      <span style="background:var(--surface2); padding:8px 14px; border-radius:50px; font-size:0.83rem;">___ does it <b>faster than</b> ___</span>
+      <span style="background:var(--surface2); padding:8px 14px; border-radius:50px; font-size:0.83rem;"><b>the best / the worst</b></span>
+      <span style="background:var(--surface2); padding:8px 14px; border-radius:50px; font-size:0.83rem;"><b>more carefully</b> than</span>
+      <span style="background:var(--surface2); padding:8px 14px; border-radius:50px; font-size:0.83rem;">___ works <b>the hardest</b></span>
+    </div>
+
+    <button class="nav-btn" style="margin-top:28px;" onclick="goTo(4)">Finish →</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     SCREEN 4 — FINISH
+═══════════════════════════════════════════ -->
+<div class="screen" id="screen-4">
+  <div class="screen-header">
+    <div>
+      <div style="font-family:'Fraunces',serif; font-size:1.4rem; color:var(--yellow);">Faster · Better · Best</div>
+      <div class="phase-label">Done!</div>
+    </div>
+    <div class="progress-dots">
+      <div class="progress-dot done"></div>
+      <div class="progress-dot done"></div>
+      <div class="progress-dot done"></div>
+      <div class="progress-dot done"></div>
+    </div>
+  </div>
+  <div class="screen-body">
+    <div class="finish-center">
+      <div class="trophy">🏆</div>
+      <div style="font-family:'Fraunces',serif; font-size:2.2rem; margin-bottom:12px; line-height:1.2;">Well done, 6a!</div>
+      <p style="color:var(--muted); font-size:1rem; line-height:1.6; margin-bottom:8px;">Final quiz score: <span style="color:var(--yellow); font-weight:800;" id="finalScore">—</span></p>
+      <p style="color:var(--muted); font-size:0.9rem; line-height:1.6; max-width:400px; margin-bottom:32px;">
+        Short adverbs → <b style="color:var(--green);">-er / the -est</b><br>
+        Long adverbs → <b style="color:var(--blue);">more / the most</b><br>
+        Irregular → <b style="color:var(--accent);">learn them!</b>
+      </p>
+      <button class="nav-btn" style="max-width:300px;" onclick="restart()">↺ Start again</button>
+    </div>
+  </div>
+</div>
+
+<!-- TIMER -->
+<div class="timer-track"><div class="timer-fill" id="timerFill" style="width:100%;"></div></div>
+<div class="timer-label" id="timerLabel">20:00</div>
+
+<script>
+// ── NAVIGATION ─────────────────────────────
+function goTo(n) {
+  document.querySelectorAll('.screen').forEach((s,i) => {
+    s.classList.toggle('visible', i === n);
+    if (i === n) s.scrollTop = 0;
+  });
+}
+
+// ── FLIP CARDS ──────────────────────────────
+function flipCard(el) { el.classList.toggle('flipped'); }
+
+// ── SORT GAME ───────────────────────────────
+const sortWords = [
+  { word: 'faster',       cat: 'comp' },
+  { word: 'hard',         cat: 'base' },
+  { word: 'the best',     cat: 'sup'  },
+  { word: 'earlier',      cat: 'comp' },
+  { word: 'loudly',       cat: 'base' },
+  { word: 'the worst',    cat: 'sup'  },
+  { word: 'more quietly', cat: 'comp' },
+  { word: 'carefully',    cat: 'base' },
+  { word: 'the hardest',  cat: 'sup'  },
+];
+
+let selectedChip = null;
+const chipPlacements = {}; // word → zone placed
+
+function buildSort() {
+  const bank = document.getElementById('sortBank');
+  bank.innerHTML = '';
+  sortWords.forEach(item => {
+    const chip = document.createElement('div');
+    chip.className = 'sort-chip';
+    chip.textContent = item.word;
+    chip.dataset.word = item.word;
+    chip.dataset.cat = item.cat;
+    chip.onclick = () => selectChip(chip);
+    bank.appendChild(chip);
+  });
+}
+
+function selectChip(chip) {
+  if (chip.classList.contains('placed')) return;
+  document.querySelectorAll('.sort-chip.selected').forEach(c => c.classList.remove('selected'));
+  if (selectedChip === chip) { selectedChip = null; return; }
+  selectedChip = chip;
+  chip.classList.add('selected');
+  document.querySelectorAll('.sort-zone').forEach(z => z.classList.add('active-zone'));
+}
+
+function placeChip(zone) {
+  if (!selectedChip) return;
+  const word = selectedChip.dataset.word;
+  const cat = selectedChip.dataset.cat;
+  chipPlacements[word] = zone;
+  // Add to zone chips
+  const container = document.getElementById('zone-' + zone + '-chips');
+  const zChip = document.createElement('div');
+  zChip.className = 'zone-chip pending-zone';
+  zChip.textContent = word;
+  zChip.dataset.word = word;
+  zChip.dataset.correct = cat;
+  zChip.dataset.placed = zone;
+  container.appendChild(zChip);
+  selectedChip.classList.add('placed', 'selected');
+  selectedChip.classList.remove('selected');
+  selectedChip = null;
+  document.querySelectorAll('.sort-zone').forEach(z => z.classList.remove('active-zone'));
+  if (Object.keys(chipPlacements).length === sortWords.length) {
+    document.getElementById('sortCheck').style.display = 'flex';
+  }
+}
+
+function checkSort() {
+  let correct = 0;
+  document.querySelectorAll('.zone-chip').forEach(chip => {
+    const isCorrect = chip.dataset.placed === chip.dataset.correct;
+    chip.classList.remove('pending-zone');
+    chip.classList.add(isCorrect ? 'correct-zone' : 'wrong-zone');
+    if (isCorrect) correct++;
+  });
+  const total = sortWords.length;
+  const fb = document.getElementById('sortFeedback');
+  fb.classList.remove('hidden', 'good', 'bad', 'info');
+  if (correct === total) {
+    fb.textContent = `✅ Perfect! All ${total} correct.`;
+    fb.classList.add('good');
+  } else {
+    fb.textContent = `${correct} / ${total} correct — wrong ones are highlighted in red.`;
+    fb.classList.add(correct >= total * 0.6 ? 'info' : 'bad');
+  }
+  document.getElementById('sortCheck').style.display = 'none';
+  document.getElementById('sortNext').style.display = 'flex';
+}
+
+// ── QUIZ ────────────────────────────────────
+const quizData = [
+  {
+    q: 'Mia sings ___ than Joe.',
+    opts: ['more well', 'better', 'more better'],
+    correct: 1,
+    fb: '"well" is irregular — comparative is "better", not "more well".'
+  },
+  {
+    q: 'In our class, Leo speaks ___ of all.',
+    opts: ['the most quietly', 'the quietliest', 'quietly most'],
+    correct: 0,
+    fb: 'Long adverbs use "the most + adverb" for superlative.'
+  },
+  {
+    q: 'She finished ___ than everyone else.',
+    opts: ['the earliest', 'more early', 'earlier'],
+    correct: 2,
+    fb: 'We compare two things, so use comparative: "earlier".'
+  },
+  {
+    q: 'He works ___ in the whole school.',
+    opts: ['harder', 'the hardest', 'hardest'],
+    correct: 1,
+    fb: 'Superlative adverbs need "the" — "the hardest".'
+  },
+  {
+    q: 'They played ___ than in the last game.',
+    opts: ['the worst', 'more badly', 'worse'],
+    correct: 2,
+    fb: '"badly" → "worse" (irregular). Comparative, not superlative.'
+  },
+  {
+    q: 'Anna runs ___ than her brother.',
+    opts: ['the fastest', 'more fast', 'faster'],
+    correct: 2,
+    fb: '"fast" is short, so just add -er: "faster".'
+  },
+];
+
+let qIdx = 0, qCorrect = 0;
+
+function buildQuiz() {
+  qIdx = 0; qCorrect = 0;
+  showQuestion();
+}
+
+function showQuestion() {
+  if (qIdx >= quizData.length) return;
+  const q = quizData[qIdx];
+  document.getElementById('quizCounter').textContent = `Question ${qIdx + 1} of ${quizData.length}`;
+  document.getElementById('quizScoreDisplay').textContent = `${qCorrect} / ${qIdx}`;
+  const display = q.q.replace('___', '<span style="border-bottom:3px solid var(--yellow); padding:0 8px; color:var(--yellow);">___</span>');
+  document.getElementById('quizQ').innerHTML = display;
+  const opts = document.getElementById('quizOptions');
+  opts.innerHTML = '';
+  const letters = ['A', 'B', 'C'];
+  q.opts.forEach((o, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'tap-btn';
+    btn.innerHTML = `<div class="option-row"><span class="option-letter">${letters[i]}</span>${o}</div>`;
+    btn.onclick = () => answerQ(i, btn);
+    opts.appendChild(btn);
+  });
+  document.getElementById('quizFeedback').className = 'feedback-pill hidden';
+  document.getElementById('quizFeedback').textContent = '';
+  document.getElementById('quizNextBtn').style.display = 'none';
+  document.getElementById('quizFinishBtn').style.display = 'none';
+}
+
+function answerQ(chosen, btn) {
+  const q = quizData[qIdx];
+  document.querySelectorAll('#quizOptions .tap-btn').forEach(b => { b.onclick = null; b.classList.add('disabled'); });
+  const fb = document.getElementById('quizFeedback');
+  if (chosen === q.correct) {
+    btn.classList.remove('disabled');
+    btn.classList.add('correct');
+    qCorrect++;
+    fb.textContent = '✅ Correct! ' + q.fb;
+    fb.className = 'feedback-pill good';
+  } else {
+    btn.classList.remove('disabled');
+    btn.classList.add('wrong');
+    document.querySelectorAll('#quizOptions .tap-btn')[q.correct].classList.add('correct');
+    fb.textContent = '❌ Not quite. ' + q.fb;
+    fb.className = 'feedback-pill bad';
+  }
+  document.getElementById('quizScoreDisplay').textContent = `${qCorrect} / ${qIdx + 1}`;
+  qIdx++;
+  if (qIdx < quizData.length) {
+    document.getElementById('quizNextBtn').style.display = 'flex';
+  } else {
+    document.getElementById('quizFinishBtn').style.display = 'flex';
+    document.getElementById('finalScore').textContent = `${qCorrect} / ${quizData.length}`;
+  }
+}
+
+function nextQuizQ() {
+  showQuestion();
+}
+
+// ── CONVERSATION PROMPTS ─────────────────────
+const prompts = [
+  { emoji:'🏃', q:'Who runs faster — you or your best friend?', hint:'Try: "I run faster than..." or "My friend runs faster than me."' },
+  { emoji:'📚', q:'Who works the hardest in your family?', hint:'Try: "I think my ___ works the hardest because..."' },
+  { emoji:'🎮', q:'Who plays video games more badly — you or your parents?', hint:'Try: "My ___ plays worse than me." or "I play the worst in my family."' },
+  { emoji:'🌅', q:'Who wakes up the earliest in your house?', hint:'Try: "My ___ wakes up the earliest. They wake up at..."' },
+  { emoji:'🦸', q:'Think of a superhero. Who fights the most carefully? Who fights the worst?', hint:'Try: "___ fights the most carefully because... but ___ fights the worst."' },
+  { emoji:'🎵', q:'Who sings better — you or your teacher?', hint:'Careful! "well → better → the best". Try to say why.' },
+];
+let promptIdx = 0;
+
+function showPrompt() {
+  const p = prompts[promptIdx];
+  document.getElementById('convoEmoji').textContent = p.emoji;
+  document.getElementById('convoQ').textContent = p.q;
+  document.getElementById('convoHint').textContent = p.hint;
+  document.getElementById('promptCounter').textContent = `${promptIdx + 1} / ${prompts.length}`;
+}
+function nextPrompt() {
+  if (promptIdx < prompts.length - 1) { promptIdx++; showPrompt(); }
+}
+function prevPrompt() {
+  if (promptIdx > 0) { promptIdx--; showPrompt(); }
+}
+
+// ── TIMER ────────────────────────────────────
+let elapsed = 0;
+const total = 20 * 60;
+setInterval(() => {
+  elapsed++;
+  const rem = Math.max(0, total - elapsed);
+  document.getElementById('timerFill').style.width = ((rem / total) * 100) + '%';
+  const m = Math.floor(rem / 60);
+  const s = rem % 60;
+  document.getElementById('timerLabel').textContent = `${m}:${s < 10 ? '0' : ''}${s}`;
+}, 1000);
+
+// ── RESTART ──────────────────────────────────
+function restart() {
+  buildSort();
+  buildQuiz();
+  promptIdx = 0;
+  showPrompt();
+  goTo(0);
+}
+
+// ── INIT ─────────────────────────────────────
+buildSort();
+buildQuiz();
+showPrompt();
+</script>
+</body>
+</html>
